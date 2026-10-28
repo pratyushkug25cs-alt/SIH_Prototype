@@ -3,8 +3,8 @@ services:
     name: apaar-verify
     runtime: node
     plan: free
-    buildCommand: npm run build
-    startCommand: npm start
+    buildCommand: npm install && node scripts/seed.js
+    startCommand: node src/server.js
     envVars:
       - key: NODE_VERSION
         value: 22.12.0
