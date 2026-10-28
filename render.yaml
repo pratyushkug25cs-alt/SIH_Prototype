@@ -11,6 +11,6 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: ID_ENC_KEY
-        generateValue: true
+        value: 119dfa03140421768f92edec1d7240254498996c7846cb742d7774d2905b8022
       - key: ID_INDEX_KEY
-        generateValue: true
+        value: caf3600683fb77c788261685c8c26a0625d3ebf7e8a0a9141dbd74a8a48cc790
