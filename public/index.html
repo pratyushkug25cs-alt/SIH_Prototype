@@ -1,0 +1,1082 @@
+<title>APAAR Verification Platform</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: sticky top bar with brand and a three-way role switch; one working column; record details open in a right-hand drawer. The laminated ID card is the only bold object, everything else stays quiet. */
+:root{
+  --bg:#ECF0F4; --surface:#FFFFFF; --surface-2:#F4F6F9; --ink:#0E1B2B; --muted:#566376; --line:#D6DDE6; --line-strong:#B5C0CD;
+  --accent:#0B5E7E; --accent-ink:#FFFFFF; --accent-soft:#DCEDF3; --bar:#8CBFD2;
+  --good:#17724A; --good-soft:#DDF1E6; --warn:#8F5600; --warn-soft:#FBEBCB; --bad:#B3261E; --bad-soft:#FADCD9; --idle:#556275; --idle-soft:#E3E8EE;
+  --bar-good:#2E8B63; --bar-good-ink:#FFFFFF; --bar-warn:#E3A23B; --bar-warn-ink:#2B1D00; --bar-bad:#C8423A; --bar-bad-ink:#FFFFFF; --bar-idle:#A9B4C1; --bar-idle-ink:#0E1B2B;
+  --card:#0F2238; --card-ink:#EAF0F6; --card-muted:#9DB0C4; --saffron:#F2A33A;
+  --shadow:0 1px 2px rgba(14,27,43,.08),0 10px 30px rgba(14,27,43,.12);
+  --font-display:'Archivo','Arial Narrow',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#09111A; --surface:#0F1A26; --surface-2:#132130; --ink:#E4EBF3; --muted:#8C9DB0; --line:#213244; --line-strong:#34495F;
+    --accent:#62BBDD; --accent-ink:#04202B; --accent-soft:#12303F; --bar:#2C6B85;
+    --good:#5CD39B; --good-soft:#0F3222; --warn:#E8B04C; --warn-soft:#36280A; --bad:#FF8F85; --bad-soft:#3A1714; --idle:#98A6B8; --idle-soft:#1C2A39;
+    --bar-good:#3FB07D; --bar-good-ink:#04180F; --bar-warn:#E0A53F; --bar-warn-ink:#2B1D00; --bar-bad:#E5655C; --bar-bad-ink:#1F0705; --bar-idle:#4F6176; --bar-idle-ink:#E4EBF3;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.5);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#09111A; --surface:#0F1A26; --surface-2:#132130; --ink:#E4EBF3; --muted:#8C9DB0; --line:#213244; --line-strong:#34495F;
+  --accent:#62BBDD; --accent-ink:#04202B; --accent-soft:#12303F; --bar:#2C6B85;
+  --good:#5CD39B; --good-soft:#0F3222; --warn:#E8B04C; --warn-soft:#36280A; --bad:#FF8F85; --bad-soft:#3A1714; --idle:#98A6B8; --idle-soft:#1C2A39;
+  --bar-good:#3FB07D; --bar-good-ink:#04180F; --bar-warn:#E0A53F; --bar-warn-ink:#2B1D00; --bar-bad:#E5655C; --bar-bad-ink:#1F0705; --bar-idle:#4F6176; --bar-idle-ink:#E4EBF3;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 14px/1.5 var(--font-body);-webkit-font-smoothing:antialiased;min-height:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+button{font:inherit;color:inherit;cursor:pointer}
+h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:26px;line-height:1.15;font-weight:700;font-stretch:108%}
+h2{font-size:16px;line-height:1.25;font-weight:700;font-stretch:104%}
+p{margin:0}
+small{color:var(--muted);font-size:12px}
+.muted{color:var(--muted)}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ico{width:1em;height:1em;flex:none}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{display:flex;align-items:center;justify-content:space-between;gap:10px 20px;flex-wrap:wrap;padding-block:10px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand svg{width:36px;height:36px;flex:none}
+.brand b{display:block;font:700 17px/1.1 var(--font-display);font-stretch:112%}
+.brand small{display:block}
+.seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:7px 16px;border-radius:6px;color:var(--muted);font-weight:500}
+.seg button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line-strong)}
+
+main{padding-block:16px 48px}
+.notice{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;background:var(--warn-soft);color:var(--ink);border:1px solid var(--warn);border-radius:8px;padding:8px 12px;font-size:13px}
+.notice span{min-width:0;flex:1 1 320px}
+
+.page-head{margin:22px 0 0;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.eyebrow{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:600;margin-bottom:4px}
+.sub{color:var(--muted);margin-top:4px}
+.pick{display:flex;align-items:center;gap:8px;min-width:0}
+.pick label{margin:0;white-space:nowrap}
+.pick select{width:auto;max-width:100%}
+
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);margin:18px 0}
+.tabs button{border:0;background:none;padding:10px 12px;color:var(--muted);font-weight:500;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;gap:6px;align-items:center}
+.tabs button[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+.count{font:500 11px/1.5 var(--font-mono);background:var(--idle-soft);color:var(--idle);padding:0 6px;border-radius:99px}
+
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 9px 2px 7px;border-radius:99px;white-space:nowrap}
+.pill .ico{width:13px;height:13px}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.idle{background:var(--idle-soft);color:var(--idle)}
+.pill.acc{background:var(--accent-soft);color:var(--accent)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);padding:7px 12px;border-radius:7px;font-weight:600;font-size:13px;text-decoration:none}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08);background:var(--accent)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.small{padding:4px 9px;font-size:12px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+input,select,textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:7px;padding:8px 10px;width:100%;min-width:0}
+textarea{font-family:var(--font-mono);font-size:12.5px;line-height:1.5;resize:vertical}
+label{display:block;font-weight:600;font-size:12.5px;margin:12px 0 4px}
+label .opt{font-weight:400;color:var(--muted)}
+.inline{display:flex;gap:8px}
+.inline .btn{flex:none}
+.err{color:var(--bad);font-size:12.5px;min-height:0;margin-top:6px}
+.err:empty{display:none}
+.hint{color:var(--muted);margin:8px 0}
+.empty{color:var(--muted);padding:14px;border:1px dashed var(--line-strong);border-radius:8px;background:var(--surface)}
+fieldset{border:0;padding:0;margin:14px 0 0;min-width:0}
+legend{font-weight:600;font-size:12.5px;padding:0;margin-bottom:4px}
+label.chk{display:flex;gap:10px;align-items:flex-start;margin:8px 0;font-weight:400;font-size:14px}
+label.chk input{width:auto;margin-top:3px}
+label.chk b{display:block;font-weight:600}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.panel>h2{margin-bottom:12px}
+.sec-h{margin:20px 0 10px}
+.sec-h:first-child{margin-top:0}
+.cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+.cols.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:4px;text-align:left;min-width:0}
+.tile .lab{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.tile .val{font:700 30px/1.1 var(--font-display);font-stretch:108%;font-variant-numeric:tabular-nums}
+.tile .sub{color:var(--muted);font-size:12.5px;margin:0}
+button.tile:hover{border-color:var(--line-strong);background:var(--surface-2)}
+.meter{height:8px;background:var(--idle-soft);border-radius:99px;overflow:hidden;margin-top:4px}
+.meter i{display:block;height:100%;background:var(--accent)}
+
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-bottom:12px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.bar-row{display:grid;grid-template-columns:minmax(0,9em) minmax(0,1fr) 2ch;gap:10px;align-items:center;margin:8px 0}
+.bar-label{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{display:flex;height:26px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.bar-track span{display:flex;align-items:center;justify-content:center;font:500 12px var(--font-mono)}
+.bar-n{font:500 12px var(--font-mono);color:var(--muted);text-align:right}
+.s-good{background:var(--bar-good);color:var(--bar-good-ink)}
+.s-warn{background:var(--bar-warn);color:var(--bar-warn-ink)}
+.s-bad{background:var(--bar-bad);color:var(--bar-bad-ink)}
+.s-idle{background:var(--bar-idle);color:var(--bar-idle-ink)}
+
+.items{display:flex;flex-direction:column}
+.item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0;padding-top:0}
+.item>div{min-width:0}
+.item b{display:block}
+.item small{display:block}
+.link{background:none;border:0;padding:0;color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+
+.toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:8px;align-items:center}
+.toolbar select{width:auto;max-width:100%}
+.tb-btns{display:flex;gap:8px}
+.count-line{color:var(--muted);font-size:12.5px;margin:10px 0 8px}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.row{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1.5fr) minmax(0,1.6fr) 56px minmax(0,1.7fr);gap:12px;align-items:center;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:11px 14px}
+.row:first-child{border-top:0}
+button.row:hover{background:var(--surface-2)}
+.row.head{background:var(--surface-2);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding-block:8px}
+.row b,.row small{display:block;overflow:hidden;text-overflow:ellipsis}
+.r-c{text-align:right}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+.chips-l{font-size:12px;color:var(--muted)}
+.chip{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line-strong);background:var(--surface);border-radius:99px;padding:3px 10px;font-size:12px;max-width:100%}
+.chip:hover{background:var(--surface-2)}
+.chip .mono{color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.filters button{border:1px solid var(--line-strong);background:var(--surface);border-radius:99px;padding:4px 12px;font-size:13px}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+
+.logrow{display:grid;grid-template-columns:130px minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.6fr);gap:12px;padding:10px 14px;border-top:1px solid var(--line);align-items:start}
+.logrow:first-child{border-top:0}
+.logrow.head{background:var(--surface-2);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding-block:8px}
+.logrow>*{min-width:0;overflow-wrap:anywhere}
+
+/* ID card */
+.idcard{position:relative;overflow:hidden;width:100%;max-width:440px;min-height:212px;border-radius:14px;padding:16px 18px 16px 26px;color:var(--card-ink);display:flex;flex-direction:column;justify-content:space-between;gap:10px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.08);
+  background:repeating-radial-gradient(circle at 100% 0%,transparent 0 9px,rgba(255,255,255,.05) 9px 10px),repeating-radial-gradient(circle at 0% 100%,transparent 0 11px,rgba(255,255,255,.04) 11px 12px),var(--card)}
+.idcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:9px;background:var(--saffron)}
+.ic-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.ic-tag{font:700 13px var(--font-display);font-stretch:120%;letter-spacing:.14em;color:var(--saffron)}
+.ic-life{font-size:11.5px;color:var(--card-muted)}
+.ic-num{font:500 clamp(20px,6.4vw,26px)/1.1 var(--font-mono);letter-spacing:.04em}
+.ic-name{font:700 18px/1.2 var(--font-display);font-stretch:106%}
+.ic-meta{font-size:12px;color:var(--card-muted)}
+.ic-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.ic-foot>div:first-child{min-width:0;font-size:12px;color:var(--card-muted)}
+.ic-foot b{color:var(--card-ink);font-weight:600;display:block}
+.ic-seal{display:flex;align-items:center;gap:8px;text-align:right;font-size:11.5px;color:var(--card-muted);flex:none}
+.ic-seal .glyph{width:38px;height:38px;color:var(--card-ink)}
+.ic-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 9px 2px 7px;border-radius:99px;background:rgba(255,255,255,.1)}
+.ic-chip.good{color:#7FE3B1}.ic-chip.warn{color:#F4CB78}.ic-chip.bad{color:#FFA39A}.ic-chip.idle{color:#B7C4D3}
+.ic-chip .ico{width:13px;height:13px}
+
+.glyph{width:44px;height:44px;display:block;color:var(--ink)}
+.glyphs{display:flex;gap:20px;flex-wrap:wrap;margin-top:10px}
+.glyphs figure{margin:0;display:flex;gap:10px;align-items:center}
+.glyphs figcaption{font-size:12px;color:var(--muted);line-height:1.35}
+
+.kv{display:grid;grid-template-columns:minmax(0,9.5em) minmax(0,1fr);gap:6px 12px;margin:0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.callout{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line-strong);border-radius:8px;padding:10px 12px;background:var(--surface-2);margin:10px 0}
+.callout .ico{width:16px;height:16px;margin-top:3px}
+.callout.good{background:var(--good-soft);border-color:var(--good)}.callout.good .ico{color:var(--good)}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn)}.callout.warn .ico{color:var(--warn)}
+.callout.bad{background:var(--bad-soft);border-color:var(--bad)}.callout.bad .ico{color:var(--bad)}
+.callout>div{min-width:0}
+.callout b{display:block}
+
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{padding:7px 10px;text-align:left;border-top:1px solid var(--line);vertical-align:top}
+thead th{border-top:0;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+tbody th{font-weight:500;color:var(--muted);white-space:nowrap}
+td.ok{color:var(--good)}td.no{color:var(--bad)}
+td .ico{width:16px;height:16px;vertical-align:-3px}
+.diff{margin:6px 0 0;padding-left:18px}
+.diff li{margin:2px 0}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+
+.chart{width:100%;height:auto;display:block}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .ax{fill:var(--muted);font:12px var(--font-mono)}
+.chart .bar{fill:var(--bar)}
+.chart .bar.hi{fill:var(--accent)}
+.chart .val{fill:var(--ink);font:500 12px var(--font-mono);text-anchor:middle}
+.chart .slot{fill:none;stroke:var(--line-strong);stroke-dasharray:3 3}
+details.t{margin-top:12px}
+details.t summary{cursor:pointer;color:var(--accent);font-weight:600}
+
+.req{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;min-width:0}
+.req-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.req-top>div{min-width:0}
+.req-top b{display:block}
+.req .scopes{margin:8px 0 0;color:var(--muted);font-size:13px}
+.codebox{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:10px}
+.codebox .mono{font-size:26px;letter-spacing:.12em;font-weight:500}
+.result{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.result h3{font-size:14px;margin:14px 0 6px}
+.hist{list-style:none;margin:0;padding:0}
+.hist li{padding:9px 0;border-top:1px solid var(--line)}
+.hist li:first-child{border-top:0;padding-top:0}
+.hist b{display:block;font-weight:600}
+.docs{list-style:none;margin:0;padding:0}
+.docs li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.docs li:first-child{border-top:0;padding-top:0}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(6,12,20,.5);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(580px,100%);background:var(--surface);z-index:50;overflow-y:auto;box-shadow:var(--shadow);border-left:1px solid var(--line);padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) 16px}
+.dr-head{position:sticky;top:0;background:var(--surface);display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:16px 0 12px;z-index:2}
+.dr-head>div{min-width:0}
+.dr-sec{padding-block:14px;border-top:1px solid var(--line)}
+.dr-sec>h3{font-size:14px;margin-bottom:8px}
+.idline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.idline .big{font-size:20px;font-weight:500;letter-spacing:.04em}
+.sgpa{display:flex;flex-wrap:wrap;gap:6px}
+.sgpa span{border:1px solid var(--line);border-radius:6px;padding:2px 8px;font:500 12px var(--font-mono)}
+
+.toasts{position:fixed;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:8px;z-index:60;pointer-events:none;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
+.toast{background:var(--ink);color:var(--surface);padding:9px 14px;border-radius:8px;box-shadow:var(--shadow);font-weight:500;max-width:min(480px,100%)}
+@media (prefers-reduced-motion:no-preference){.toast{animation:rise .18s ease-out}@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}}
+
+details.about{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+details.about summary{cursor:pointer;font-weight:600}
+details.about ul{margin:10px 0 0;padding-left:18px;color:var(--muted)}
+details.about li{margin:4px 0}
+
+@media (max-width:820px){
+  .cols,.cols.even{grid-template-columns:minmax(0,1fr)}
+  .toolbar{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .toolbar .tb-search{grid-column:1 / -1}
+  .tb-btns{grid-column:1 / -1}
+  .tb-btns .btn{flex:1}
+  .toolbar select{width:100%}
+}
+@media (max-width:720px){
+  .row,.row.head{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n s" "i p";row-gap:6px}
+  .row.head{display:none}
+  .r-n{grid-area:n}.r-s{grid-area:s}.r-i{grid-area:i}.r-p{grid-area:p;text-align:right}.r-c{display:none}
+  .logrow,.logrow.head{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .logrow.head{display:none}
+  .logrow>:nth-child(4){grid-column:1 / -1}
+}
+@media (max-width:560px){
+  .brand small{display:none}
+  .seg{width:100%}
+  .seg button{flex:1;padding-inline:8px}
+  h1{font-size:23px}
+  .pick{width:100%}
+  .pick select{flex:1}
+  .bar-row{grid-template-columns:minmax(0,7em) minmax(0,1fr) 2ch}
+  .codebox .mono{font-size:22px}
+}
+</style>
+
+<header class="top">
+  <div class="wrap top-in">
+    <div class="brand">
+      <svg viewBox="0 0 36 36" aria-hidden="true"><rect x="1" y="6" width="34" height="24" rx="4" fill="#0F2238"/><rect x="1" y="6" width="6" height="24" rx="2.5" fill="#F2A33A"/><circle cx="16" cy="16" r="3.3" fill="#EAF0F6"/><path d="M10 25.5c.7-3.2 2.7-4.6 6-4.6s5.3 1.4 6 4.6" fill="none" stroke="#EAF0F6" stroke-width="1.7" stroke-linecap="round"/><path d="M25 15.2l2.5 2.5 4.2-5" fill="none" stroke="#F2A33A" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div><b>APAAR Verify</b><small>Student data and verification for AICTE-approved institutions</small></div>
+    </div>
+    <div class="seg" id="roles" role="tablist" aria-label="Choose a role to try"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="notice" role="note">
+    <span>Prototype with sample data. Names, IDs and institutions are made up, and nothing here connects to DigiLocker or the real APAAR registry. Changes stay in this browser.</span>
+    <button class="btn small" data-act="reset">Reset sample data</button>
+  </div>
+  <div id="app" aria-live="polite"></div>
+  <details class="about">
+    <summary>What this prototype simulates</summary>
+    <ul>
+      <li>The APAAR registry and DigiLocker identity lookup are a short sample list inside the page.</li>
+      <li>The one-time code stands in for DigiLocker's consent step. A real build would use its consent API.</li>
+      <li>The fingerprint is a SHA-256 hash of the attested record. A real build would also sign it with the institution's digital signature certificate and keep it on a server.</li>
+      <li>Access to a record is limited to what the student approved, and each access is written to the audit log.</li>
+    </ul>
+  </details>
+</main>
+
+<div class="scrim" id="scrim" data-act="close" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Record details" hidden></aside>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- small helpers ---------- */
+const LS='apaar-verify-proto-v1';
+const $=(s,el)=>(el||document).querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const digits=s=>String(s||'').replace(/\D/g,'');
+const fmtApaar=s=>digits(s).slice(0,12).replace(/(\d{4})(?=\d)/g,'$1 ');
+const fmtCode=s=>digits(s).slice(0,6).replace(/(\d{3})(?=\d)/g,'$1 ');
+const maskApaar=s=>s?'•••• •••• '+digits(s).slice(-4):'—';
+const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
+const fmtDob=s=>{const d=new Date(s+'T00:00:00Z');return isNaN(d)?String(s):d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});};
+const fmtDate=i=>new Date(i).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Kolkata'});
+const fmtTime=i=>new Date(i).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit',hour12:true,timeZone:'Asia/Kolkata'});
+const fmtClock=i=>new Date(i).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'Asia/Kolkata'});
+const validApaar=s=>/^\d{12}$/.test(digits(s));
+
+function rng(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
+function cyrb(str){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<str.length;i++){const ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return (4294967296*(2097151&h2)+(h1>>>0)).toString(16).padStart(14,'0');}
+async function sha(text){
+  try{
+    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }catch(e){return 'f'+cyrb(text);}
+}
+
+/* ---------- reference data ---------- */
+const INST={
+  A:{name:'Demo Institute of Technology',short:'DIT Patna',city:'Patna, Bihar',aicte:'1-9000011',cycle:'2026-27',prefix:'DIT'},
+  B:{name:'Sample College of Management',short:'SCM Gaya',city:'Gaya, Bihar',aicte:'1-9000027',cycle:'2026-27',prefix:'SCM'}
+};
+const BR={CSE:'Computer Science and Engineering',ECE:'Electronics and Communication Engineering',ME:'Mechanical Engineering',CE:'Civil Engineering',EE:'Electrical Engineering',FIN:'Finance'};
+const DURATION={'B.Tech':4,'MBA':2};
+const PROGS=[['B.Tech','CSE'],['B.Tech','ECE'],['B.Tech','ME'],['B.Tech','CE'],['B.Tech','EE'],['MBA','FIN']];
+const VERIFIER='Meridian Hiring Desk';
+const SCOPES={identity:['Identity','Name and date of birth'],program:['Programme','Institution, programme, batch and enrolment status'],marks:['Marks','CGPA, credits earned and semester results']};
+const PURPOSES=['Employment background check','Admission to higher studies','Scholarship eligibility','Education loan'];
+const STATE={
+  verified:{label:'Verified',cls:'good',ico:'check'},
+  pending:{label:'Awaiting attestation',cls:'warn',ico:'clock'},
+  flagged:{label:'Identity mismatch',cls:'bad',ico:'alert'},
+  tampered:{label:'Changed after attestation',cls:'bad',ico:'alert'},
+  unlinked:{label:'No APAAR ID',cls:'idle',ico:'dash'}
+};
+const CSTATE={
+  pending:{label:'Waiting for student',cls:'warn',ico:'clock'},
+  approved:{label:'Approved, code issued',cls:'acc',ico:'check'},
+  used:{label:'Completed',cls:'good',ico:'check'},
+  denied:{label:'Declined by student',cls:'bad',ico:'x'},
+  revoked:{label:'Revoked by student',cls:'idle',ico:'x'},
+  expired:{label:'Code expired',cls:'idle',ico:'clock'},
+  locked:{label:'Locked after 3 wrong codes',cls:'bad',ico:'alert'}
+};
+const ICON={
+  check:'<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  clock:'<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 5v3.2l2 1.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  alert:'<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.2v5.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="12" r="1.1" fill="currentColor"/></svg>',
+  dash:'<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 8h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  x:'<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+};
+
+/* ---------- seed data ---------- */
+const ROWS=[
+  ['A','Ananya Kumari','2005-08-12','B.Tech','CSE',2023,'verified'],
+  ['A','Rohan Prasad','2005-02-27','B.Tech','CSE',2023,'verified','Active',4],
+  ['A','Aditya Raj','2006-05-30','B.Tech','CSE',2024,'pending'],
+  ['A','Vikash Kumar','2007-01-09','B.Tech','CSE',2025,'verified'],
+  ['A','Sneha Verma','2006-01-19','B.Tech','ECE',2024,'verified'],
+  ['A','Harsh Vardhan','2004-12-21','B.Tech','ECE',2022,'verified','Graduated'],
+  ['A','Arjun Mishra','2007-04-17','B.Tech','ECE',2025,'unlinked'],
+  ['A','Mohammad Faiz','2005-11-03','B.Tech','ME',2023,'flagged','Active',0,'Mohd. Faiz'],
+  ['A','Tanmay Gupta','2006-06-25','B.Tech','ME',2024,'verified','Withdrawn'],
+  ['A','Kavya Singh','2006-09-08','B.Tech','CE',2024,'flagged','Active',0,null,'2006-08-09'],
+  ['A','Nitin Yadav','2005-10-14','B.Tech','EE',2023,'verified'],
+  ['A','Shreya Das','2008-02-21','B.Tech','EE',2026,'unlinked'],
+  ['A','Neha Sharma','2002-07-11','MBA','FIN',2025,'verified'],
+  ['A','Rekha Devi','2001-12-05','MBA','FIN',2025,'pending'],
+  ['B','Divya Rani','2005-03-28','B.Tech','CSE',2023,'verified'],
+  ['B','Kunal Anand','2002-09-16','MBA','FIN',2025,'verified']
+];
+const EXTRA=[{name:'Arjun Mishra',dob:'2007-04-17'},{name:'Shreya Das',dob:'2008-02-21'},{name:'Ishita Rani',dob:'2008-03-14'}];
+
+function payload(st){
+  return JSON.stringify({apaar:st.apaar,name:st.name,dob:st.dob,aicte:INST[st.inst].aicte,program:st.program,branch:st.branch,adm:st.adm,status:st.status,sgpa:st.sgpa,credits:st.credits});
+}
+
+function seed(){
+  const r=rng(20261027),used=new Set(),counters={};
+  const mk=()=>{let s;do{s=String(1+Math.floor(r()*9));for(let i=0;i<11;i++)s+=Math.floor(r()*10);}while(used.has(s));used.add(s);return s;};
+  const d={v:1,students:[],registry:{},samples:[],consents:[],log:[]};
+  const day=864e5,now=Date.now();
+  ROWS.forEach((row,i)=>{
+    const inst=row[0],name=row[1],dob=row[2],program=row[3],branch=row[4],adm=row[5],state=row[6],status=row[7]||'Active',backlog=row[8]||0,regName=row[9],regDob=row[10];
+    const dur=DURATION[program];
+    let done=Math.min(dur*2,Math.max(0,(2026-adm)*2));
+    if(status==='Graduated')done=dur*2;
+    if(status==='Withdrawn')done=Math.min(done,2);
+    const sg=[],base=6.7+r()*2;
+    for(let k=0;k<done;k++)sg.push(Math.round(Math.max(5.8,Math.min(9.7,base+(r()-.5)*1.1))*100)/100);
+    counters[inst+branch]=(counters[inst+branch]||0)+1;
+    const apaar=state==='unlinked'?null:mk();
+    const st={id:'s'+(i+1),inst,name,dob,program,branch,adm,status,sgpa:sg,credits:done*20-backlog,
+      enrol:INST[inst].prefix+'/'+String(adm).slice(2)+'/'+branch+'/'+String(counters[inst+branch]).padStart(3,'0'),
+      apaar,state,hash:null,sealed:null,attestedAt:null,attestedBy:null};
+    if(apaar)d.registry[apaar]={name:regName||name,dob:regDob||dob};
+    if(state==='verified'){
+      st.attestedAt=new Date(now-(2+Math.floor(r()*38))*day-Math.floor(r()*day)).toISOString();
+      st.attestedBy='Registrar, '+INST[inst].short;
+      d.log.push({t:st.attestedAt,kind:'inst',actor:st.attestedBy,act:'Record attested',apaar,detail:'Fingerprint sealed'});
+    }
+    d.students.push(st);
+  });
+  EXTRA.forEach(x=>{const a=mk();d.registry[a]={name:x.name,dob:x.dob};d.samples.push({apaar:a,name:x.name,dob:x.dob});});
+  const s1=d.students[0];
+  d.consents.push({id:'c1',apaar:s1.apaar,requester:VERIFIER,purpose:'Employment background check',scopes:['identity','program'],status:'used',code:'482913',createdAt:new Date(now-2*day-3600e3).toISOString(),approvedAt:new Date(now-2*day-3000e3).toISOString(),expiresAt:new Date(now-2*day-2400e3).toISOString(),result:null});
+  d.log.push({t:new Date(now-2*day-3000e3).toISOString(),kind:'student',actor:'Student',act:'Consent approved',apaar:s1.apaar,detail:VERIFIER+' can see identity and programme'});
+  d.log.push({t:new Date(now-2*day-2700e3).toISOString(),kind:'verifier',actor:VERIFIER,act:'Verification completed',apaar:s1.apaar,detail:'Record verified, integrity check passed'});
+  d.log.sort((a,b)=>b.t.localeCompare(a.t));
+  return d;
+}
+async function sealSeed(d){
+  await Promise.all(d.students.filter(s=>s.state==='verified').map(async s=>{s.sealed=payload(s);s.hash=await sha(s.sealed);}));
+}
+function load(){try{const t=localStorage.getItem(LS);if(!t)return null;const d=JSON.parse(t);return d&&d.v===1&&Array.isArray(d.students)?d:null;}catch(e){return null;}}
+function save(){try{localStorage.setItem(LS,JSON.stringify(D));}catch(e){}}
+
+/* ---------- state ---------- */
+let D=null;
+const INTEG={};
+const S={role:'inst',inst:'A',tab:{inst:'overview',student:'id'},stu:null,q:'',prog:'all',st:'all',logf:'all',drawer:null,openId:null,lastFocus:null,
+  vf:{id:'',purpose:PURPOSES[0],scopes:{identity:true,program:true,marks:false}},open:null,imp:{csv:'',rows:null}};
+
+/* ---------- domain logic ---------- */
+function effState(s){return s.state==='verified'&&INTEG[s.id]===false?'tampered':s.state;}
+function cgpa(s){return s.sgpa.length?s.sgpa.reduce((a,b)=>a+b,0)/s.sgpa.length:null;}
+function required(s){return DURATION[s.program]*40;}
+function progLabel(s){return s.program==='MBA'?'MBA · '+BR[s.branch]:s.program+' · '+s.branch;}
+function semText(s){return s.status==='Active'?'Semester '+(s.sgpa.length+1)+' · '+s.adm+' batch':s.status+' · '+s.adm+' batch';}
+function identityMatch(s){
+  const r=D.registry[s.apaar];
+  if(!r)return {found:false};
+  return {found:true,name:norm(r.name)===norm(s.name),dob:r.dob===s.dob,reg:r};
+}
+async function recheck(){
+  await Promise.all(D.students.filter(s=>s.hash).map(async s=>{INTEG[s.id]=(await sha(payload(s)))===s.hash;}));
+}
+function addLog(kind,act,apaar,detail,actor){
+  const inst=INST[S.inst];
+  const who=actor||(kind==='inst'?'Registrar, '+inst.short:kind==='student'?'Student':kind==='verifier'?VERIFIER:'Unknown (simulated)');
+  D.log.unshift({t:new Date().toISOString(),kind,actor:who,act,apaar:apaar||null,detail:detail||''});
+  if(D.log.length>300)D.log.length=300;
+}
+async function attest(st){
+  st.sealed=payload(st);st.hash=await sha(st.sealed);st.state='verified';st.attestedAt=new Date().toISOString();st.attestedBy='Registrar, '+INST[st.inst].short;INTEG[st.id]=true;
+  addLog('inst','Record attested',st.apaar,'Fingerprint sealed');
+}
+function checkApaar(raw,selfId){
+  const id=digits(raw);
+  if(id.length!==12)return {ok:false,msg:'An APAAR ID has 12 digits. You entered '+id.length+'.'};
+  if(!D.registry[id])return {ok:false,msg:'This ID is not in the APAAR registry (sample list).'};
+  const other=D.students.find(s=>s.apaar===id&&s.id!==selfId);
+  if(other)return {ok:false,msg:'This ID is already linked to another student record.'};
+  return {ok:true,id};
+}
+function applyLink(st,id){
+  st.apaar=id;
+  const m=identityMatch(st);
+  st.state=(m.name&&m.dob)?'pending':'flagged';
+  addLog('inst','APAAR ID linked',id,st.state==='pending'?'Identity matches the registry':'Identity differs from the registry');
+}
+function makeStudent(v){
+  const nn=D.students.filter(s=>s.inst===S.inst&&s.branch===v.branch).length+1;
+  return {id:'s'+Date.now().toString(36)+Math.floor(Math.random()*99),inst:S.inst,name:v.name,dob:v.dob,program:v.program,branch:v.branch,adm:v.adm,status:'Active',sgpa:[],credits:0,
+    enrol:INST[S.inst].prefix+'/'+String(v.adm).slice(2)+'/'+v.branch+'/'+String(nn).padStart(3,'0'),apaar:null,state:'unlinked',hash:null,sealed:null,attestedAt:null,attestedBy:null};
+}
+function diffSealed(st){
+  if(!st.sealed)return [];
+  let o;try{o=JSON.parse(st.sealed);}catch(e){return [];}
+  const n=JSON.parse(payload(st));const out=[];
+  const L={name:'Name',dob:'Date of birth',program:'Programme',branch:'Branch',adm:'Admission year',status:'Status',credits:'Credits earned',apaar:'APAAR ID'};
+  Object.keys(L).forEach(k=>{if(o[k]!==n[k])out.push({label:L[k],from:o[k],to:n[k]});});
+  const m=Math.max((o.sgpa||[]).length,(n.sgpa||[]).length);
+  for(let i=0;i<m;i++){if((o.sgpa||[])[i]!==(n.sgpa||[])[i])out.push({label:'Semester '+(i+1)+' SGPA',from:(o.sgpa||[])[i],to:(n.sgpa||[])[i]});}
+  return out;
+}
+function glyph(hash){
+  if(!hash)return '';
+  let cells='';
+  for(let y=0;y<8;y++)for(let x=0;x<4;x++){
+    const nib=parseInt(hash[y]||'0',16)||0;
+    if((nib>>(3-x))&1){cells+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="currentColor"/><rect x="'+(7-x)+'" y="'+y+'" width="1" height="1" fill="currentColor"/>';}
+  }
+  return '<svg class="glyph" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">'+cells+'</svg>';
+}
+function sweep(){D.consents.forEach(c=>{if(c.status==='approved'&&Date.now()>Date.parse(c.expiresAt))c.status='expired';});}
+
+/* ---------- html pieces ---------- */
+const pill=k=>{const c=STATE[k];return '<span class="pill '+c.cls+'">'+ICON[c.ico]+c.label+'</span>';};
+const cpill=k=>{const c=CSTATE[k];return '<span class="pill '+c.cls+'">'+ICON[c.ico]+c.label+'</span>';};
+function toast(msg){
+  const el=document.createElement('div');el.className='toast';el.textContent=msg;$('#toasts').appendChild(el);
+  setTimeout(()=>el.remove(),3600);
+}
+function tabsHTML(list,cur,key){
+  return '<nav class="tabs" aria-label="Sections">'+list.map(t=>'<button data-act="tab" data-k="'+key+'" data-v="'+t[0]+'"'+(cur===t[0]?' aria-current="page"':'')+'>'+t[1]+(t[2]?'<span class="count">'+t[2]+'</span>':'')+'</button>').join('')+'</nav>';
+}
+function samplesHTML(target){
+  return '<div class="chips"><span class="chips-l">Sample registry IDs</span>'+D.samples.map(x=>'<button type="button" class="chip" data-act="sample-fill" data-target="'+target+'" data-v="'+x.apaar+'"><span>'+esc(x.name)+'</span><span class="mono">'+fmtApaar(x.apaar)+'</span></button>').join('')+'</div>';
+}
+function groupsOf(sts){
+  const m=new Map();
+  sts.forEach(s=>{
+    const k=s.program+'|'+s.branch;
+    if(!m.has(k))m.set(k,{key:k,label:progLabel(s),n:0,good:0,warn:0,bad:0,idle:0});
+    const g=m.get(k);g.n++;
+    const e=effState(s);
+    if(e==='verified')g.good++;else if(e==='pending')g.warn++;else if(e==='unlinked')g.idle++;else g.bad++;
+  });
+  return Array.from(m.values());
+}
+function reason(s){
+  const e=effState(s);
+  if(e==='tampered')return 'Record changed after it was attested';
+  if(e==='flagged'){const m=identityMatch(s);return m.name===false&&m.dob===false?'Name and date of birth differ from the registry':m.name===false?'Name differs from the registry':'Date of birth differs from the registry';}
+  if(e==='pending')return 'Linked and waiting for attestation';
+  return 'No APAAR ID linked yet';
+}
+
+/* ---------- institution views ---------- */
+function viewInst(){
+  const I=INST[S.inst],sts=D.students.filter(s=>s.inst===S.inst);
+  const nQ=sts.filter(s=>['pending','flagged','tampered'].includes(effState(s))).length;
+  const tabs=[['overview','Overview'],['students','Students',String(sts.length)],['queue','Verification queue',nQ?String(nQ):''],['audit','Audit log']];
+  const cur=S.tab.inst;
+  let body='';
+  if(cur==='overview')body=instOverview(sts);
+  else if(cur==='students')body=instStudents(sts);
+  else if(cur==='queue')body=instQueue(sts);
+  else body=instAudit();
+  return '<div class="page-head"><div><p class="eyebrow">Registrar desk</p><h1>'+esc(I.name)+'</h1><p class="sub">'+esc(I.city)+' · AICTE ID '+I.aicte+' · Approval '+I.cycle+' <span class="muted">(sample)</span></p></div></div>'+tabsHTML(tabs,cur,'inst')+body;
+}
+function instOverview(sts){
+  const n=k=>sts.filter(s=>effState(s)===k).length;
+  const linked=sts.filter(s=>s.apaar).length,pct=sts.length?Math.round(linked/sts.length*100):0;
+  const groups=groupsOf(sts),max=Math.max(1,...groups.map(g=>g.n));
+  const fix=n('flagged')+n('tampered');
+  const seg=(c,v,l)=>v?'<span class="s-'+c+'" style="width:calc(100% / '+max+' * '+v+')" title="'+v+' '+l+'">'+v+'</span>':'';
+  const order={tampered:0,flagged:1,pending:2,unlinked:3};
+  const need=sts.filter(s=>effState(s)!=='verified').sort((a,b)=>order[effState(a)]-order[effState(b)]).slice(0,6);
+  const recent=D.log.slice(0,5);
+  return '<div class="tiles">'+
+    '<div class="tile"><span class="lab">Students enrolled</span><span class="val">'+sts.length+'</span><p class="sub">in '+groups.length+' programmes</p></div>'+
+    '<div class="tile"><span class="lab">APAAR IDs linked</span><span class="val">'+linked+' <small>of '+sts.length+'</small></span><div class="meter" role="img" aria-label="'+pct+' percent linked"><i style="width:'+pct+'%"></i></div></div>'+
+    '<button class="tile" data-act="goto" data-tab="queue"><span class="lab">Awaiting attestation</span><span class="val">'+n('pending')+'</span><p class="sub">Open the queue</p></button>'+
+    '<button class="tile" data-act="goto" data-tab="queue"><span class="lab">Needs correction</span><span class="val">'+fix+'</span><p class="sub">Mismatches and changed records</p></button>'+
+  '</div>'+
+  '<div class="cols">'+
+    '<section class="panel"><h2>Linking status by programme</h2>'+
+      '<div class="legend"><span><i class="s-good"></i>Verified</span><span><i class="s-warn"></i>Awaiting attestation</span><span><i class="s-bad"></i>Needs correction</span><span><i class="s-idle"></i>No APAAR ID</span></div>'+
+      groups.map(g=>'<div class="bar-row"><div class="bar-label" title="'+esc(g.label)+'">'+esc(g.label)+'</div><div class="bar-track">'+seg('good',g.good,'verified')+seg('warn',g.warn,'awaiting attestation')+seg('bad',g.bad,'needing correction')+seg('idle',g.idle,'without an APAAR ID')+'</div><div class="bar-n">'+g.n+'</div></div>').join('')+
+    '</section>'+
+    '<section class="panel"><h2>Needs attention</h2>'+(need.length?'<div class="items">'+need.map(s=>'<div class="item"><div><b>'+esc(s.name)+'</b><small>'+esc(reason(s))+'</small></div><button class="btn small" data-act="open" data-id="'+s.id+'">Open</button></div>').join('')+'</div>':'<p class="empty">Every student record is verified.</p>')+'</section>'+
+  '</div>'+
+  '<section class="panel" style="margin-top:16px"><h2>Recent activity</h2><div class="items">'+recent.map(l=>'<div class="item"><div><b>'+esc(l.act)+'</b><small>'+esc(l.actor)+' · '+maskApaar(l.apaar)+'</small></div><small>'+fmtTime(l.t)+'</small></div>').join('')+'</div><div class="actions"><button class="btn small" data-act="goto" data-tab="audit">Open the audit log</button></div></section>';
+}
+function instStudents(sts){
+  const groups=groupsOf(sts);
+  const stOpts=[['all','All statuses'],['verified','Verified'],['pending','Awaiting attestation'],['flagged','Identity mismatch'],['tampered','Changed after attestation'],['unlinked','No APAAR ID']];
+  return '<div class="toolbar">'+
+    '<div class="tb-search"><label class="sr" for="q">Search students</label><input id="q" type="search" placeholder="Search name, enrolment no. or APAAR ID" value="'+esc(S.q)+'" data-input="q" autocomplete="off" style="margin:0"></div>'+
+    '<select aria-label="Programme" data-change="prog"><option value="all">All programmes</option>'+groups.map(g=>'<option value="'+g.key+'"'+(S.prog===g.key?' selected':'')+'>'+esc(g.label)+'</option>').join('')+'</select>'+
+    '<select aria-label="Status" data-change="st">'+stOpts.map(o=>'<option value="'+o[0]+'"'+(S.st===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+'</select>'+
+    '<div class="tb-btns"><button class="btn" data-act="imp-open">Bulk import</button><button class="btn primary" data-act="add-open">Add student</button></div>'+
+  '</div><p class="count-line" id="count"></p><div class="list" id="list"></div>';
+}
+function filteredStudents(){
+  const q=norm(S.q),qd=digits(S.q);
+  return D.students.filter(s=>s.inst===S.inst).filter(s=>{
+    if(S.prog!=='all'&&(s.program+'|'+s.branch)!==S.prog)return false;
+    if(S.st!=='all'&&effState(s)!==S.st)return false;
+    if(q){const hay=norm(s.name+' '+s.enrol);if(!hay.includes(q)&&!(qd.length>=3&&s.apaar&&s.apaar.includes(qd)))return false;}
+    return true;
+  });
+}
+function rowHTML(s){
+  const c=cgpa(s);
+  return '<button class="row" data-act="open" data-id="'+s.id+'"><span class="r-n"><b>'+esc(s.name)+'</b><small>'+esc(s.enrol)+'</small></span><span class="r-i mono">'+(s.apaar?fmtApaar(s.apaar):'<span class="muted">Not linked</span>')+'</span><span class="r-p">'+esc(progLabel(s))+'<small>'+esc(semText(s))+'</small></span><span class="r-c mono">'+(c==null?'—':c.toFixed(2))+'</span><span class="r-s">'+pill(effState(s))+'</span></button>';
+}
+function renderList(){
+  const list=$('#list');if(!list)return;
+  const rows=filteredStudents(),total=D.students.filter(s=>s.inst===S.inst).length;
+  $('#count').textContent='Showing '+rows.length+' of '+total+' students';
+  list.innerHTML='<div class="row head"><span>Student</span><span>APAAR ID</span><span>Programme</span><span class="r-c">CGPA</span><span>Status</span></div>'+(rows.length?rows.map(rowHTML).join(''):'<div class="empty" style="border:0;border-radius:0">No student matches these filters.</div>');
+}
+function instQueue(sts){
+  const tam=sts.filter(s=>effState(s)==='tampered'),fl=sts.filter(s=>effState(s)==='flagged'),pe=sts.filter(s=>effState(s)==='pending');
+  let h='';
+  if(tam.length){
+    h+='<h2 class="sec-h">Changed after attestation</h2>'+tam.map(s=>{
+      const d=diffSealed(s);
+      return '<div class="req"><div class="req-top"><div><b>'+esc(s.name)+'</b><small>'+esc(s.enrol)+'</small></div>'+pill('tampered')+'</div>'+(d.length?'<ul class="diff">'+d.map(x=>'<li>'+esc(x.label)+': <span class="mono">'+esc(x.from==null?'none':x.from)+'</span> became <span class="mono">'+esc(x.to==null?'none':x.to)+'</span></li>').join('')+'</ul>':'')+'<div class="actions"><button class="btn small" data-act="restore" data-id="'+s.id+'">Restore attested values</button><button class="btn small primary" data-act="reattest" data-id="'+s.id+'">Re-attest current data</button></div></div>';
+    }).join('');
+  }
+  if(fl.length){
+    h+='<h2 class="sec-h">Identity mismatches</h2>'+fl.map(s=>{
+      const m=identityMatch(s);
+      return '<div class="req"><div class="req-top"><div><b>'+esc(s.name)+'</b><small>'+esc(s.enrol)+' · '+fmtApaar(s.apaar)+'</small></div>'+pill('flagged')+'</div>'+
+        '<div class="scroll"><table><thead><tr><th></th><th>Our record</th><th>APAAR registry</th></tr></thead><tbody><tr><th>Name</th><td class="'+(m.name?'ok':'no')+'">'+esc(s.name)+'</td><td class="'+(m.name?'ok':'no')+'">'+esc(m.reg.name)+'</td></tr><tr><th>Date of birth</th><td class="'+(m.dob?'ok':'no')+'">'+fmtDob(s.dob)+'</td><td class="'+(m.dob?'ok':'no')+'">'+fmtDob(m.reg.dob)+'</td></tr></tbody></table></div>'+
+        '<div class="actions"><button class="btn small primary" data-act="use-registry" data-id="'+s.id+'">Use registry details</button><button class="btn small" data-act="unlink" data-id="'+s.id+'">Unlink this ID</button><button class="btn small" data-act="open" data-id="'+s.id+'">Open record</button></div></div>';
+    }).join('');
+  }
+  if(pe.length){
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:20px 0 10px"><h2>Awaiting attestation</h2><button class="btn small primary" data-act="attest-all">Attest all ('+pe.length+')</button></div><div class="list">'+pe.map(s=>'<div class="row" style="grid-template-columns:minmax(0,1fr) auto;"><span><b>'+esc(s.name)+'</b><small>'+esc(s.enrol)+' · '+fmtApaar(s.apaar)+'</small></span><span style="display:flex;gap:6px"><button class="btn small" data-act="open" data-id="'+s.id+'">Open</button><button class="btn small primary" data-act="attest" data-id="'+s.id+'">Attest</button></span></div>').join('')+'</div>';
+  }
+  if(!h)h='<p class="empty">Nothing is waiting. Records appear here after an APAAR ID is linked.</p>';
+  return h;
+}
+function instAudit(){
+  const f=S.logf,rows=D.log.filter(l=>f==='all'||(f==='inst'?(l.kind==='inst'||l.kind==='system'):l.kind===f)).slice(0,80);
+  const chips=[['all','All'],['inst','Institution'],['student','Student'],['verifier','Verifier']];
+  return '<div class="filters" role="group" aria-label="Filter by actor">'+chips.map(c=>'<button data-act="logf" data-v="'+c[0]+'" aria-pressed="'+(f===c[0])+'">'+c[1]+'</button>').join('')+'</div>'+
+    '<div class="list"><div class="logrow head"><span>When</span><span>Who</span><span>Action</span><span>Detail</span></div>'+
+    (rows.length?rows.map(l=>'<div class="logrow"><span class="muted">'+fmtTime(l.t)+'</span><span>'+esc(l.actor)+'</span><span><b>'+esc(l.act)+'</b><small class="mono">'+maskApaar(l.apaar)+'</small></span><span>'+esc(l.detail)+'</span></div>').join(''):'<div class="empty" style="border:0">No entries for this filter.</div>')+'</div>';
+}
+
+/* ---------- drawer ---------- */
+function openDrawer(kind,id){
+  S.lastFocus=document.activeElement;S.drawer=kind;S.openId=id||null;renderDrawer(true);
+}
+function closeDrawer(){
+  S.drawer=null;S.openId=null;renderDrawer();
+  if(S.lastFocus&&S.lastFocus.focus&&document.contains(S.lastFocus))S.lastFocus.focus();
+}
+function renderDrawer(fresh){
+  const el=$('#drawer'),sc=$('#scrim');
+  if(!S.drawer){el.hidden=true;sc.hidden=true;el.innerHTML='';return;}
+  const y=el.scrollTop;
+  let st=null;
+  if(S.drawer==='detail'){st=D.students.find(s=>s.id===S.openId);if(!st){closeDrawer();return;}el.innerHTML=detailHTML(st);}
+  else if(S.drawer==='add')el.innerHTML=addHTML();
+  else el.innerHTML=importHTML();
+  el.hidden=false;sc.hidden=false;
+  el.scrollTop=fresh?0:y;
+  if(fresh){const b=$('[data-act="close"]',el);if(b)b.focus();}
+  if(st)fillInteg(st);
+  if(S.drawer==='import'&&S.imp.rows)$('#impOut').innerHTML=impOutHTML();
+}
+function drHead(title,sub,extra){
+  return '<div class="dr-head"><div><h2>'+title+'</h2>'+(sub?'<p class="sub" style="margin-top:2px">'+sub+'</p>':'')+(extra?'<div style="margin-top:8px">'+extra+'</div>':'')+'</div><button class="btn small" data-act="close" aria-label="Close">'+ICON.x+' Close</button></div>';
+}
+function detailHTML(st){
+  const I=INST[st.inst],es=effState(st),c=cgpa(st),m=st.apaar?identityMatch(st):{found:false};
+  let idSec;
+  if(st.apaar){
+    idSec='<div class="idline"><span class="mono big">'+fmtApaar(st.apaar)+'</span><span class="pill good">'+ICON.check+'Linked</span></div>';
+  }else{
+    idSec='<p class="hint">No APAAR ID is linked to this record. Ask the student for the 12-digit ID from DigiLocker or the APAAR page, then enter it here.</p><form data-form="link" data-id="'+st.id+'" novalidate><label for="lkId" style="margin-top:0">APAAR ID</label><div class="inline"><input id="lkId" name="apaar" inputmode="numeric" autocomplete="off" placeholder="0000 0000 0000" maxlength="14" data-input="fmt"><button class="btn primary" type="submit">Link ID</button></div><p class="err" id="lkErr" role="alert"></p></form>'+samplesHTML('lkId');
+  }
+  let cross='';
+  if(st.apaar&&m.found){
+    cross='<div class="dr-sec"><h3>Identity cross-check</h3><div class="scroll"><table><thead><tr><th></th><th>Our record</th><th>APAAR registry</th><th><span class="sr">Match</span></th></tr></thead><tbody>'+
+      '<tr><th>Name</th><td>'+esc(st.name)+'</td><td>'+esc(m.reg.name)+'</td><td class="'+(m.name?'ok':'no')+'">'+(m.name?ICON.check:ICON.alert)+'</td></tr>'+
+      '<tr><th>Date of birth</th><td>'+fmtDob(st.dob)+'</td><td>'+fmtDob(m.reg.dob)+'</td><td class="'+(m.dob?'ok':'no')+'">'+(m.dob?ICON.check:ICON.alert)+'</td></tr></tbody></table></div>'+
+      (es==='flagged'?'<div class="callout bad">'+ICON.alert+'<div><b>This record cannot be attested yet</b>Fix the difference first. Using the registry details changes our record to match.</div></div><div class="actions"><button class="btn small primary" data-act="use-registry" data-id="'+st.id+'">Use registry details</button><button class="btn small" data-act="unlink" data-id="'+st.id+'">Unlink this ID</button></div>':'')+'</div>';
+  }
+  const acad='<div class="dr-sec"><h3>Academic record</h3><dl class="kv"><dt>Programme</dt><dd>'+esc(st.program)+', '+esc(BR[st.branch])+'</dd><dt>Batch</dt><dd>'+st.adm+' · '+esc(st.status)+'</dd><dt>CGPA</dt><dd class="mono">'+(c==null?'No results yet':c.toFixed(2))+'</dd><dt>Credits</dt><dd class="mono">'+st.credits+' of '+required(st)+'</dd></dl>'+(st.sgpa.length?'<div class="sgpa" style="margin-top:10px" aria-label="Semester SGPA">'+st.sgpa.map((v,i)=>'<span>S'+(i+1)+' '+v.toFixed(2)+'</span>').join('')+'</div>':'')+'</div>';
+  let integ='<div class="dr-sec"><h3>Attestation and integrity</h3><div id="integ"><p class="hint">Checking fingerprint…</p></div>';
+  if(es==='pending')integ+='<div class="actions"><button class="btn primary" data-act="attest" data-id="'+st.id+'">Attest this record</button></div>';
+  if(es==='tampered'){
+    const d=diffSealed(st);
+    integ+='<div class="callout bad">'+ICON.alert+'<div><b>Values differ from the attested snapshot</b>'+(d.length?'<ul class="diff">'+d.map(x=>'<li>'+esc(x.label)+': <span class="mono">'+esc(x.from==null?'none':x.from)+'</span> became <span class="mono">'+esc(x.to==null?'none':x.to)+'</span></li>').join('')+'</ul>':'')+'</div></div><div class="actions"><button class="btn" data-act="restore" data-id="'+st.id+'">Restore attested values</button><button class="btn primary" data-act="reattest" data-id="'+st.id+'">Re-attest current data</button></div>';
+  }
+  integ+='</div>';
+  let demo='';
+  if(st.state==='verified'&&es==='verified')demo='<div class="dr-sec"><h3>Demo control</h3><p class="hint" style="margin-top:0">Edit this record without re-attesting, the way an unauthorised change would look. Then run a verification from the Verifier role to see the integrity check fail.</p><button class="btn small danger" data-act="tamper" data-id="'+st.id+'">Simulate an unauthorised edit</button></div>';
+  return drHead(esc(st.name),esc(st.enrol)+' · '+esc(I.short),pill(es))+
+    '<div class="dr-sec"><h3>APAAR ID</h3>'+idSec+'</div>'+cross+acad+integ+demo;
+}
+async function fillInteg(st){
+  const el=$('#integ');if(!el)return;
+  if(!st.hash){el.innerHTML='<p class="hint" style="margin-top:0">Not attested yet. The institution seals a fingerprint of the record when it attests it.</p>';return;}
+  const now=await sha(payload(st));
+  const el2=$('#integ');if(!el2||S.openId!==st.id)return;
+  const ok=now===st.hash;
+  el2.innerHTML='<div class="callout '+(ok?'good':'bad')+'">'+(ok?ICON.check:ICON.alert)+'<div><b>'+(ok?'Fingerprint matches':'Fingerprint does not match')+'</b>Sealed '+fmtDate(st.attestedAt)+' by '+esc(st.attestedBy||'the registrar')+'.</div></div>'+
+    '<div class="glyphs"><figure>'+glyph(st.hash)+'<figcaption>Sealed<br><span class="mono">'+st.hash.slice(0,12)+'…</span></figcaption></figure><figure>'+glyph(now)+'<figcaption>Recomputed now<br><span class="mono">'+now.slice(0,12)+'…</span></figcaption></figure></div>';
+}
+function addHTML(){
+  return drHead('Add a student','Record the student, then link the APAAR ID now or later.')+
+  '<form data-form="add" novalidate>'+
+    '<label for="aName">Full name</label><input id="aName" name="name" autocomplete="off">'+
+    '<label for="aDob">Date of birth</label><input id="aDob" name="dob" type="date">'+
+    '<label for="aProg">Programme and branch</label><select id="aProg" name="prog">'+PROGS.map(p=>'<option value="'+p[0]+'|'+p[1]+'">'+(p[0]==='MBA'?'MBA · '+BR[p[1]]:p[0]+' · '+BR[p[1]])+'</option>').join('')+'</select>'+
+    '<label for="aAdm">Admission year</label><select id="aAdm" name="adm"><option>2026</option><option>2025</option></select>'+
+    '<label for="aId">APAAR ID <span class="opt">optional</span></label><input id="aId" name="apaar" inputmode="numeric" autocomplete="off" placeholder="0000 0000 0000" maxlength="14" data-input="fmt">'+
+    samplesHTML('aId')+
+    '<p class="hint">Try a sample ID with a different name or date of birth to see the mismatch flag.</p>'+
+    '<p class="err" id="addErr" role="alert"></p>'+
+    '<div class="actions"><button class="btn primary" type="submit">Add student</button><button class="btn" type="button" data-act="close">Cancel</button></div>'+
+  '</form>';
+}
+function sampleCSV(){
+  const sm=n=>(D.samples.find(x=>x.name===n)||{}).apaar||'';
+  const dup=sm('Ishita Rani');
+  return ['name,dob,enrolment,programme,branch,admission_year,apaar_id',
+    'Ishita Rani,2008-03-14,,B.Tech,CSE,2026,'+fmtApaar(dup),
+    'Pranav Jha,2008-06-02,,B.Tech,ME,2026,',
+    'Meera Kumari,2007-11-30,,MBA,FIN,2025,1234 5678 90',
+    'Dev Raj,2008-01-05,,B.Tech,CE,2026,'+fmtApaar(sm('Shreya Das')),
+    ',2008-04-04,,B.Tech,ECE,2026,',
+    'Ishita Rani,2008-03-14,,B.Tech,CSE,2026,'+fmtApaar(dup)].join('\n');
+}
+function importHTML(){
+  if(!S.imp.csv)S.imp.csv=sampleCSV();
+  return drHead('Bulk import','Paste rows from a spreadsheet saved as CSV.')+
+    '<p class="hint">Columns: name, dob (YYYY-MM-DD), enrolment (optional, generated if blank), programme, branch code, admission year, APAAR ID (optional). The sample below includes rows with problems on purpose.</p>'+
+    '<label class="sr" for="csvIn">CSV rows</label><textarea id="csvIn" rows="9" spellcheck="false" data-input="csv">'+esc(S.imp.csv)+'</textarea>'+
+    '<div class="actions"><button class="btn primary" data-act="imp-check">Check rows</button><button class="btn" data-act="close">Cancel</button></div><div id="impOut"></div>';
+}
+function checkCSV(text){
+  const out=[],seen=new Set();
+  text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach((ln,i)=>{
+    if(i===0&&/^name\s*,/i.test(ln))return;
+    const c=ln.split(',').map(x=>x.trim());
+    const name=c[0],dob=c[1],enrol=c[2],program=c[3],branch=c[4],adm=c[5],idRaw=c[6]||'';
+    const row={n:out.length+1,name:name||'(blank)',level:'ok',msg:'Ready to import',rec:null};
+    let err=null;
+    if(!name)err='Name is missing.';
+    else if(!/^\d{4}-\d{2}-\d{2}$/.test(dob||'')||isNaN(new Date(dob)))err='Date of birth must be written as YYYY-MM-DD.';
+    else if(!DURATION[program])err='Programme must be B.Tech or MBA.';
+    else if(!BR[branch]||(program==='MBA')!==(branch==='FIN'))err='Branch code does not fit the programme.';
+    else if(!/^20(2[2-6])$/.test(adm||''))err='Admission year must be between 2022 and 2026.';
+    let id=null;
+    if(!err&&idRaw){
+      const k=checkApaar(idRaw,null);
+      if(!k.ok)err=k.msg;
+      else if(seen.has(k.id))err='This APAAR ID appears twice in the file.';
+      else id=k.id;
+    }
+    if(err){row.level='error';row.msg=err;}
+    else{
+      if(id){seen.add(id);const tmp={apaar:id,name,dob};const mm=identityMatch(tmp);if(!(mm.name&&mm.dob)){row.level='warn';row.msg='Will import as an identity mismatch. The registry has "'+mm.reg.name+'", '+fmtDob(mm.reg.dob)+'.';}else row.msg='Ready to import, identity matches the registry';}
+      row.rec={name,dob,program,branch,adm:Number(adm),apaar:id,enrol:enrol};
+    }
+    out.push(row);
+  });
+  return out;
+}
+function impOutHTML(){
+  const rows=S.imp.rows||[],ok=rows.filter(r=>r.level!=='error').length;
+  if(!rows.length)return '<p class="hint">No rows found.</p>';
+  return '<h3 style="margin:18px 0 8px">'+ok+' of '+rows.length+' rows can be imported</h3><div class="list">'+rows.map(r=>'<div class="item" style="padding:10px 14px"><div><b>'+r.n+'. '+esc(r.name)+'</b><small>'+esc(r.msg)+'</small></div>'+(r.level==='error'?'<span class="pill bad">'+ICON.x+'Skipped</span>':r.level==='warn'?'<span class="pill warn">'+ICON.alert+'Import with flag</span>':'<span class="pill good">'+ICON.check+'OK</span>')+'</div>').join('')+'</div>'+(ok?'<div class="actions"><button class="btn primary" data-act="imp-go">Import '+ok+' records</button></div>':'');
+}
+
+/* ---------- student views ---------- */
+function ensureStu(){
+  const list=D.students.filter(s=>s.apaar);
+  if(!list.find(s=>s.id===S.stu)){const f=list.find(s=>s.state==='verified'&&s.inst==='A'&&s.sgpa.length>3)||list[0];S.stu=f?f.id:null;}
+}
+function viewStudent(){
+  ensureStu();
+  const list=D.students.filter(s=>s.apaar),st=D.students.find(s=>s.id===S.stu);
+  if(!st)return '<p class="empty" style="margin-top:20px">No student has an APAAR ID yet.</p>';
+  sweep();
+  const pend=D.consents.filter(c=>c.apaar===st.apaar&&c.status==='pending').length;
+  const tabs=[['id','My APAAR ID'],['acad','Academics'],['consent','Consent and access',pend?String(pend):'']];
+  const cur=S.tab.student;
+  const body=cur==='id'?studID(st):cur==='acad'?studAcad(st):studConsent(st);
+  return '<div class="page-head"><div><p class="eyebrow">Student account</p><h1>'+esc(st.name)+'</h1><p class="sub">You decide who can see your record, and for how long.</p></div><div class="pick"><label for="stuPick">Signed in as</label><select id="stuPick" data-change="stu">'+list.map(s=>'<option value="'+s.id+'"'+(s.id===st.id?' selected':'')+'>'+esc(s.name)+' · '+INST[s.inst].short+'</option>').join('')+'</select></div></div>'+tabsHTML(tabs,cur,'student')+body;
+}
+function idCard(st){
+  const es=effState(st),I=INST[st.inst],sc=STATE[es];
+  return '<article class="idcard" aria-label="APAAR ID card">'+
+    '<div class="ic-top"><span class="ic-tag">APAAR ID</span><span class="ic-life">Lifelong academic ID</span></div>'+
+    '<div class="ic-num">'+fmtApaar(st.apaar)+'</div>'+
+    '<div><div class="ic-name">'+esc(st.name)+'</div><div class="ic-meta">'+esc(st.program)+' · '+esc(BR[st.branch])+' · '+st.adm+' batch</div></div>'+
+    '<div class="ic-foot"><div><b>'+esc(I.name)+'</b>AICTE ID '+I.aicte+'<div style="margin-top:6px"><span class="ic-chip '+sc.cls+'">'+ICON[sc.ico]+(es==='verified'?'Attested by institution':sc.label)+'</span></div></div>'+(st.hash?'<div class="ic-seal"><span>Record<br>fingerprint</span>'+glyph(st.hash)+'</div>':'')+'</div>'+
+  '</article>';
+}
+function docsFor(st){
+  const ok=effState(st)==='verified',l=[['Admission letter'],['Bonafide certificate']];
+  if(st.sgpa.length)l.push(['Marksheets, semesters 1 to '+st.sgpa.length]);
+  l.push(['Fee receipt, 2026-27']);
+  return l.map(x=>'<li><span>'+esc(x[0])+'</span>'+(ok?'<span class="pill good">'+ICON.check+'Verifiable</span>':'<span class="pill idle">'+ICON.dash+'After attestation</span>')+'</li>').join('');
+}
+function studID(st){
+  const es=effState(st);
+  let note='';
+  if(es==='pending')note='<div class="callout warn">'+ICON.clock+'<div><b>Waiting for your institution</b>Your registrar has linked your ID but has not attested the record yet. Verifiers will see that it is not attested.</div></div>';
+  if(es==='flagged')note='<div class="callout bad">'+ICON.alert+'<div><b>Your details differ from the APAAR registry</b>Your institution found a difference in your name or date of birth. Ask the registrar to correct it. Your record cannot be released until then.</div></div>';
+  if(es==='tampered')note='<div class="callout bad">'+ICON.alert+'<div><b>Your record is being re-checked</b>The stored record no longer matches what your institution attested. It will not be released until the registrar resolves this.</div></div>';
+  const I=INST[st.inst];
+  return '<div class="cols"><div class="stack">'+idCard(st)+note+'</div><div class="stack">'+
+    '<section class="panel"><h2>Linked details</h2><dl class="kv"><dt>Institution</dt><dd>'+esc(I.name)+'</dd><dt>AICTE ID</dt><dd class="mono">'+I.aicte+'</dd><dt>Enrolment no.</dt><dd class="mono">'+esc(st.enrol)+'</dd><dt>Programme</dt><dd>'+esc(st.program)+', '+esc(BR[st.branch])+'</dd><dt>Status</dt><dd>'+esc(st.status)+'</dd><dt>Date of birth</dt><dd>'+fmtDob(st.dob)+'</dd></dl></section>'+
+    '<section class="panel"><h2>Documents</h2><ul class="docs">'+docsFor(st)+'</ul></section></div></div>';
+}
+function sgpaChart(st){
+  const slots=DURATION[st.program]*2,W=420,H=220,L=30,R=6,T=14,B=26,pw=W-L-R,ph=H-T-B,sw=pw/slots,bw=Math.min(34,sw*.62);
+  const y=v=>T+ph-(v/10)*ph;
+  let g='',bars='';
+  [0,2,4,6,8,10].forEach(t=>{g+='<line class="grid" x1="'+L+'" x2="'+(W-R)+'" y1="'+y(t)+'" y2="'+y(t)+'"/><text class="ax" x="'+(L-6)+'" y="'+(y(t)+4)+'" text-anchor="end">'+t+'</text>';});
+  for(let i=0;i<slots;i++){
+    const cx=L+sw*i+sw/2,v=st.sgpa[i];
+    if(v!=null){const last=i===st.sgpa.length-1;bars+='<rect class="bar'+(last?' hi':'')+'" x="'+(cx-bw/2).toFixed(1)+'" y="'+y(v).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(y(0)-y(v)).toFixed(1)+'" rx="2"/><text class="val" x="'+cx.toFixed(1)+'" y="'+(y(v)-5).toFixed(1)+'">'+v.toFixed(2)+'</text>';}
+    else bars+='<rect class="slot" x="'+(cx-bw/2).toFixed(1)+'" y="'+y(10).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+ph+'" rx="2"/>';
+    bars+='<text class="ax" x="'+cx.toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">S'+(i+1)+'</text>';
+  }
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="SGPA by semester on a scale of 0 to 10">'+g+bars+'</svg>';
+}
+function studAcad(st){
+  const c=cgpa(st),req=required(st),pct=Math.round(st.credits/req*100),done=st.sgpa.length,total=DURATION[st.program]*2;
+  const tiles='<div class="tiles"><div class="tile"><span class="lab">CGPA</span><span class="val">'+(c==null?'—':c.toFixed(2))+'</span><p class="sub">out of 10</p></div>'+
+    '<div class="tile"><span class="lab">Credits earned</span><span class="val">'+st.credits+' <small>of '+req+'</small></span><div class="meter" role="img" aria-label="'+pct+' percent of credits earned"><i style="width:'+pct+'%"></i></div></div>'+
+    '<div class="tile"><span class="lab">Semesters done</span><span class="val">'+done+' <small>of '+total+'</small></span><p class="sub">'+esc(st.status)+'</p></div></div>';
+  if(!done)return tiles+'<p class="empty">No semester results yet. They appear after the first end-semester exams.</p>';
+  return tiles+'<section class="panel"><h2>SGPA by semester</h2>'+sgpaChart(st)+'<details class="t"><summary>Show as a table</summary><div class="scroll"><table><thead><tr><th>Semester</th><th>SGPA</th><th>Credits</th></tr></thead><tbody>'+st.sgpa.map((v,i)=>'<tr><td>S'+(i+1)+'</td><td class="mono">'+v.toFixed(2)+'</td><td class="mono">20</td></tr>').join('')+'</tbody></table></div></details></section>';
+}
+function scopeList(c){return '<ul class="diff" style="margin-top:6px">'+c.scopes.map(k=>'<li><b>'+SCOPES[k][0]+'</b>: '+SCOPES[k][1]+'</li>').join('')+'</ul>';}
+function consentCard(c){
+  let act='';
+  if(c.status==='pending')act='<div class="actions"><button class="btn primary" data-act="c-approve" data-id="'+c.id+'">Approve and get code</button><button class="btn" data-act="c-deny" data-id="'+c.id+'">Decline</button></div>';
+  if(c.status==='approved')act='<div class="codebox"><div><div class="mono">'+fmtCode(c.code)+'</div><small>Valid until '+fmtClock(c.expiresAt)+'. Share it only with this verifier.</small></div><div style="display:flex;gap:8px"><button class="btn small" data-act="copy" data-v="'+c.code+'">Copy</button><button class="btn small danger" data-act="c-revoke" data-id="'+c.id+'">Revoke</button></div></div>';
+  return '<div class="req"><div class="req-top"><div><b>'+esc(c.requester)+'</b><small>'+esc(c.purpose)+' · '+fmtTime(c.createdAt)+'</small></div>'+cpill(c.status)+'</div>'+(c.status==='pending'||c.status==='approved'?'<p class="scopes" style="margin-bottom:0">They asked to see:</p>'+scopeList(c):'<p class="scopes">Shared: '+c.scopes.map(k=>SCOPES[k][0]).join(', ')+'</p>')+act+'</div>';
+}
+function studConsent(st){
+  const mine=D.consents.filter(c=>c.apaar===st.apaar).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+  const pend=mine.filter(c=>c.status==='pending'),act=mine.filter(c=>c.status==='approved'),past=mine.filter(c=>c.status!=='pending'&&c.status!=='approved');
+  const hist=D.log.filter(l=>l.apaar===st.apaar).slice(0,12);
+  return '<div class="cols"><section>'+
+    '<h2 class="sec-h">Requests waiting for you</h2>'+(pend.length?pend.map(consentCard).join(''):'<p class="empty">No requests right now. When a verifier asks for your record, it shows up here.</p>')+
+    (act.length?'<h2 class="sec-h">Codes you have shared</h2>'+act.map(consentCard).join(''):'')+
+    (past.length?'<h2 class="sec-h">Earlier requests</h2>'+past.map(consentCard).join(''):'')+
+  '</section><section class="panel"><h2>Access history</h2>'+(hist.length?'<ul class="hist">'+hist.map(l=>'<li><b>'+esc(l.act)+'</b><small>'+esc(l.actor)+' · '+fmtTime(l.t)+'</small>'+(l.detail?'<small>'+esc(l.detail)+'</small>':'')+'</li>').join('')+'</ul>':'<p class="empty">Nobody has accessed your record yet.</p>')+'</section></div>';
+}
+
+/* ---------- verifier view ---------- */
+function pickSamples(){
+  const a=D.students.filter(s=>s.apaar),f=k=>a.find(s=>effState(s)===k);
+  const out=[['Verified record',f('verified')],['Awaiting attestation',f('pending')],['Identity mismatch',f('flagged')]].filter(x=>x[1]).map(x=>({l:x[0],id:x[1].apaar}));
+  out.push({l:'Unknown ID',id:'000000000000'});
+  return out;
+}
+function viewVerifier(){
+  sweep();
+  const mine=D.consents.filter(c=>c.requester===VERIFIER).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+  return '<div class="page-head"><div><p class="eyebrow">Verification desk</p><h1>'+esc(VERIFIER)+'</h1><p class="sub">Sample verifier. You see a record only after the student approves and shares a one-time code.</p></div></div>'+
+  '<div class="cols" style="margin-top:18px"><section class="panel"><h2>New verification request</h2>'+
+    '<form data-form="request" novalidate>'+
+      '<label for="vId" style="margin-top:0">APAAR ID</label><input id="vId" name="apaar" inputmode="numeric" autocomplete="off" placeholder="0000 0000 0000" maxlength="14" data-input="fmt" value="'+esc(S.vf.id)+'">'+
+      '<div class="chips"><span class="chips-l">Sample IDs</span>'+pickSamples().map(x=>'<button type="button" class="chip" data-act="sample-fill" data-target="vId" data-v="'+x.id+'"><span>'+x.l+'</span><span class="mono">'+fmtApaar(x.id)+'</span></button>').join('')+'</div>'+
+      '<label for="vPurpose">Purpose</label><select id="vPurpose" name="purpose" data-change="vp">'+PURPOSES.map(p=>'<option'+(S.vf.purpose===p?' selected':'')+'>'+p+'</option>').join('')+'</select>'+
+      '<fieldset><legend>What do you need to confirm?</legend>'+Object.keys(SCOPES).map(k=>'<label class="chk"><input type="checkbox" data-change="vs" data-k="'+k+'"'+(S.vf.scopes[k]?' checked':'')+'><span><b>'+SCOPES[k][0]+'</b><small>'+SCOPES[k][1]+'</small></span></label>').join('')+'</fieldset>'+
+      '<p class="err" id="reqErr" role="alert"></p>'+
+      '<div class="actions"><button class="btn primary" type="submit">Request consent</button></div>'+
+    '</form></section>'+
+    '<section><h2 class="sec-h">Your requests</h2>'+(mine.length?mine.map(reqHTML).join(''):'<p class="empty">No requests yet. Send one from the form. The student approves it in the Student role.</p>')+'</section></div>';
+}
+function reqHTML(c){
+  const st=D.students.find(s=>s.apaar===c.apaar);
+  let body='';
+  if(c.status==='pending')body='<p class="hint" style="margin-bottom:0">Waiting for the student to approve. For this demo, <button class="link" data-act="open-as-student" data-id="'+(st?st.id:'')+'">switch to the student</button> to approve it and read out the code.</p>';
+  if(c.status==='approved')body='<form data-form="code" data-id="'+c.id+'" novalidate><label for="code-'+c.id+'">One-time code from the student</label><div class="inline"><input id="code-'+c.id+'" name="code" inputmode="numeric" autocomplete="off" placeholder="000 000" maxlength="7" data-input="code"><button class="btn primary" type="submit">Verify</button></div><p class="err" role="alert"></p><small>Valid until '+fmtClock(c.expiresAt)+'</small></form>';
+  if(c.status==='used'&&c.result)body='<div class="actions"><button class="btn small" data-act="toggle-result" data-id="'+c.id+'">'+(S.open===c.id?'Hide result':'View result')+'</button></div>';
+  return '<div class="req"><div class="req-top"><div><b>'+esc(c.purpose)+'</b><small class="mono">'+maskApaar(c.apaar)+'</small><small>'+fmtTime(c.createdAt)+'</small></div>'+cpill(c.status)+'</div><p class="scopes">Asked for: '+c.scopes.map(k=>SCOPES[k][0]).join(', ')+'</p>'+body+(S.open===c.id&&c.result?resultHTML(c):'')+'</div>';
+}
+function scopedData(st,scopes){
+  const o={},I=INST[st.inst];
+  if(scopes.includes('identity'))o.identity=[['Name',st.name],['Date of birth',fmtDob(st.dob)]];
+  if(scopes.includes('program'))o.program=[['Institution',I.name+' (AICTE ID '+I.aicte+')'],['Programme',st.program+', '+BR[st.branch]],['Batch',st.adm+' · '+st.status]];
+  if(scopes.includes('marks')){const c=cgpa(st);o.marks=[['CGPA',c==null?'No results yet':c.toFixed(2)+' of 10'],['Credits',st.credits+' of '+required(st)],['Semester SGPA',st.sgpa.length?st.sgpa.map((v,i)=>'S'+(i+1)+' '+v.toFixed(2)).join(', '):'None']];}
+  return o;
+}
+function resultHTML(c){
+  const r=c.result,V={
+    ok:['good','check','Record verified','The institution attested this record and the integrity check passed.'],
+    tampered:['bad','alert','Integrity check failed','This record was changed after the institution attested it. No data is released.'],
+    flagged:['bad','alert','Identity under review','The institution found a mismatch with the APAAR registry. No data is released.'],
+    pending:['warn','clock','Not attested yet','The institution has not attested this record. No data is released.']
+  }[r.verdict];
+  let h='<div class="result"><div class="callout '+V[0]+'" style="margin-top:0">'+ICON[V[1]]+'<div><b>'+V[2]+'</b>'+V[3]+'</div></div>';
+  if(r.data){
+    const T={identity:'Identity',program:'Programme',marks:'Marks'};
+    Object.keys(r.data).forEach(k=>{h+='<h3>'+T[k]+'</h3><dl class="kv">'+r.data[k].map(x=>'<dt>'+esc(x[0])+'</dt><dd>'+esc(x[1])+'</dd>').join('')+'</dl>';});
+  }
+  if(r.hashStored){
+    h+='<h3>Integrity check</h3><div class="glyphs"><figure>'+glyph(r.hashStored)+'<figcaption>Sealed by institution<br><span class="mono">'+r.hashStored.slice(0,12)+'…</span></figcaption></figure><figure>'+glyph(r.hashNow)+'<figcaption>Recomputed now<br><span class="mono">'+r.hashNow.slice(0,12)+'…</span></figcaption></figure></div><small style="display:block;margin-top:8px">Checked '+fmtTime(r.at)+'. Attested '+(r.attestedAt?fmtDate(r.attestedAt):'never')+'.</small>';
+  }
+  return h+'</div>';
+}
+async function runVerify(c,code){
+  const st=D.students.find(s=>s.apaar===c.apaar);
+  if(!st)return {ok:false,msg:'No record found for this ID.'};
+  if(Date.now()>Date.parse(c.expiresAt)){c.status='expired';return {ok:false,msg:'This code has expired. Ask the student for a new request.'};}
+  if(digits(code)!==c.code){
+    c.attempts=(c.attempts||0)+1;
+    if(c.attempts>=3){c.status='locked';addLog('verifier','Code locked',c.apaar,'Three wrong codes entered');return {ok:false,msg:'Too many wrong codes. This request is locked.'};}
+    return {ok:false,msg:'That code does not match. '+(3-c.attempts)+' attempt'+(3-c.attempts===1?'':'s')+' left.'};
+  }
+  const now=await sha(payload(st)),intact=!!st.hash&&now===st.hash;
+  let verdict='pending';
+  if(st.state==='verified')verdict=intact?'ok':'tampered';else if(st.state==='flagged')verdict='flagged';
+  c.result={verdict,at:new Date().toISOString(),hashStored:st.hash,hashNow:now,attestedAt:st.attestedAt,data:verdict==='ok'?scopedData(st,c.scopes):null};
+  c.status='used';
+  addLog('verifier','Verification completed',c.apaar,verdict==='ok'?'Record verified, integrity check passed':verdict==='tampered'?'Integrity check failed, no data released':verdict==='flagged'?'Identity under review, no data released':'Not attested, no data released');
+  return {ok:true};
+}
+
+/* ---------- render ---------- */
+function renderRoles(){
+  $('#roles').innerHTML=[['inst','Institution'],['student','Student'],['verifier','Verifier']].map(r=>'<button role="tab" aria-selected="'+(S.role===r[0])+'" data-act="role" data-v="'+r[0]+'">'+r[1]+'</button>').join('');
+}
+function render(){
+  sweep();renderRoles();
+  const app=$('#app');
+  app.innerHTML=S.role==='inst'?viewInst():S.role==='student'?viewStudent():viewVerifier();
+  if(S.role==='inst'&&S.tab.inst==='students')renderList();
+  if(S.drawer==='detail')renderDrawer();
+}
+async function refresh(){await recheck();save();render();}
+
+/* ---------- events ---------- */
+const handlers={
+  role(b){S.role=b.dataset.v;S.open=null;closeDrawerQuiet();render();window.scrollTo(0,0);},
+  tab(b){S.tab[b.dataset.k]=b.dataset.v;render();},
+  goto(b){S.role='inst';S.tab.inst=b.dataset.tab;render();window.scrollTo(0,0);},
+  open(b){openDrawer('detail',b.dataset.id);},
+  close(){closeDrawer();},
+  'add-open'(){openDrawer('add');},
+  'imp-open'(){S.imp={csv:'',rows:null};openDrawer('import');},
+  'imp-check'(){const t=$('#csvIn');S.imp.csv=t.value;S.imp.rows=checkCSV(t.value);$('#impOut').innerHTML=impOutHTML();},
+  async 'imp-go'(){
+    const rows=(S.imp.rows||[]).filter(r=>r.rec);let nLink=0;
+    rows.forEach(r=>{const st=makeStudent(r.rec);if(r.rec.enrol)st.enrol=r.rec.enrol;D.students.push(st);if(r.rec.apaar){applyLink(st,r.rec.apaar);nLink++;}});
+    addLog('inst','Bulk import',null,rows.length+' records added, '+nLink+' with an APAAR ID');
+    S.imp={csv:'',rows:null};closeDrawer();S.tab.inst='students';await refresh();toast(rows.length+' records imported');
+  },
+  async attest(b){const st=D.students.find(s=>s.id===b.dataset.id);if(!st||st.state!=='pending')return;await attest(st);await refresh();toast('Record attested');},
+  async 'attest-all'(){const l=D.students.filter(s=>s.inst===S.inst&&s.state==='pending');for(const s of l)await attest(s);await refresh();toast(l.length+' records attested');},
+  async 'use-registry'(b){const st=D.students.find(s=>s.id===b.dataset.id),m=identityMatch(st);if(!m.found)return;st.name=m.reg.name;st.dob=m.reg.dob;st.state='pending';addLog('inst','Registry details adopted',st.apaar,'Name and date of birth now match the registry');await refresh();toast('Record updated, ready to attest');},
+  async unlink(b){const st=D.students.find(s=>s.id===b.dataset.id);addLog('inst','APAAR ID unlinked',st.apaar,'Entered in error');st.apaar=null;st.state='unlinked';st.hash=null;st.sealed=null;delete INTEG[st.id];await refresh();toast('ID unlinked');},
+  async tamper(b){
+    const st=D.students.find(s=>s.id===b.dataset.id);
+    if(st.sgpa.length){const i=st.sgpa.length-1;st.sgpa[i]=Math.min(10,Math.round((st.sgpa[i]+.6)*100)/100);}else st.credits+=4;
+    addLog('system','Record changed without attestation',st.apaar,'Simulated edit for the demo');await refresh();toast('Record edited without re-attesting');
+  },
+  async restore(b){
+    const st=D.students.find(s=>s.id===b.dataset.id);let o;try{o=JSON.parse(st.sealed);}catch(e){return;}
+    st.name=o.name;st.dob=o.dob;st.program=o.program;st.branch=o.branch;st.adm=o.adm;st.status=o.status;st.sgpa=o.sgpa.slice();st.credits=o.credits;
+    addLog('inst','Attested values restored',st.apaar,'');await refresh();toast('Attested values restored');
+  },
+  async reattest(b){const st=D.students.find(s=>s.id===b.dataset.id);st.state='pending';await attest(st);await refresh();toast('Record re-attested');},
+  logf(b){S.logf=b.dataset.v;render();},
+  'sample-fill'(b){const t=document.getElementById(b.dataset.target);if(!t)return;t.value=fmtApaar(b.dataset.v);t.dispatchEvent(new Event('input',{bubbles:true}));t.focus();},
+  async reset(){try{localStorage.removeItem(LS);}catch(e){}D=seed();await sealSeed(D);for(const k in INTEG)delete INTEG[k];await recheck();save();S.stu=null;S.open=null;closeDrawerQuiet();render();toast('Sample data reset');},
+  'c-approve'(b){
+    const c=D.consents.find(x=>x.id===b.dataset.id);if(!c)return;
+    c.status='approved';c.code=String(100000+Math.floor(Math.random()*900000));c.approvedAt=new Date().toISOString();c.expiresAt=new Date(Date.now()+10*60000).toISOString();
+    addLog('student','Consent approved',c.apaar,c.requester+' can see '+c.scopes.map(k=>SCOPES[k][0].toLowerCase()).join(', '));save();render();toast('Approved. Share the code with the verifier.');
+  },
+  'c-deny'(b){const c=D.consents.find(x=>x.id===b.dataset.id);if(!c)return;c.status='denied';addLog('student','Consent declined',c.apaar,c.requester);save();render();},
+  'c-revoke'(b){const c=D.consents.find(x=>x.id===b.dataset.id);if(!c)return;c.status='revoked';addLog('student','Consent revoked',c.apaar,c.requester);save();render();toast('Access revoked');},
+  copy(b){
+    const v=b.dataset.v;
+    try{navigator.clipboard.writeText(v).then(()=>toast('Code copied'),()=>toast('Copy is not available here. Select the code instead.'));}catch(e){toast('Copy is not available here. Select the code instead.');}
+  },
+  'open-as-student'(b){if(!b.dataset.id)return;S.role='student';S.stu=b.dataset.id;S.tab.student='consent';render();window.scrollTo(0,0);},
+  'toggle-result'(b){S.open=S.open===b.dataset.id?null:b.dataset.id;render();}
+};
+function closeDrawerQuiet(){S.drawer=null;S.openId=null;renderDrawer();}
+
+const forms={
+  async add(f){
+    const err=t=>{$('#addErr').textContent=t;};
+    const name=f.name.value.trim(),dob=f.dob.value;
+    if(!name){err('Enter the student’s full name.');return;}
+    if(!dob){err('Enter the date of birth.');return;}
+    const p=f.prog.value.split('|');
+    const st=makeStudent({name,dob,program:p[0],branch:p[1],adm:Number(f.adm.value)});
+    let id=null;
+    if(digits(f.apaar.value)){const k=checkApaar(f.apaar.value,st.id);if(!k.ok){err(k.msg);return;}id=k.id;}
+    D.students.push(st);addLog('inst','Student added',null,name+', '+st.enrol);
+    if(id)applyLink(st,id);
+    await refresh();S.openId=st.id;S.drawer='detail';renderDrawer(true);toast('Student added');
+  },
+  async link(f){
+    const st=D.students.find(s=>s.id===f.dataset.id),k=checkApaar(f.apaar.value,st.id);
+    if(!k.ok){$('#lkErr').textContent=k.msg;return;}
+    applyLink(st,k.id);await refresh();toast(st.state==='pending'?'ID linked. Identity matches the registry.':'ID linked. Identity differs from the registry.');
+  },
+  request(f){
+    const err=t=>{$('#reqErr').textContent=t;};
+    S.vf.id=f.apaar.value;
+    const id=digits(f.apaar.value);
+    if(id.length!==12){err('An APAAR ID has 12 digits. You entered '+id.length+'.');return;}
+    const scopes=Object.keys(SCOPES).filter(k=>S.vf.scopes[k]);
+    if(!scopes.length){err('Choose at least one thing to confirm.');return;}
+    const st=D.students.find(s=>s.apaar===id);
+    if(!st){err('No record at an AICTE-approved institution is linked to this ID.');return;}
+    const c={id:'c'+Date.now().toString(36),apaar:id,requester:VERIFIER,purpose:f.purpose.value,scopes,status:'pending',code:null,createdAt:new Date().toISOString(),result:null};
+    D.consents.unshift(c);addLog('verifier','Verification requested',id,c.purpose);S.vf.id='';save();render();toast('Request sent to the student');
+  },
+  async code(f){
+    const c=D.consents.find(x=>x.id===f.dataset.id);
+    const r=await runVerify(c,f.code.value);
+    save();
+    if(!r.ok){render();const o=$('[data-id="'+c.id+'"] .err');if(o)o.textContent=r.msg;toast(r.msg);return;}
+    S.open=c.id;render();toast('Verification complete');
+  }
+};
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');
+  if(!b)return;
+  if(b.id==='scrim'&&e.target!==b)return;
+  const fn=handlers[b.dataset.act];
+  if(fn)Promise.resolve(fn(b,e)).catch(x=>{console.error(x);});
+});
+document.addEventListener('submit',e=>{
+  const f=e.target.closest('form[data-form]');
+  if(!f)return;
+  e.preventDefault();
+  Promise.resolve(forms[f.dataset.form](f)).catch(x=>{console.error(x);});
+});
+document.addEventListener('input',e=>{
+  const t=e.target,k=t.dataset&&t.dataset.input;
+  if(!k)return;
+  if(k==='fmt'){t.value=fmtApaar(t.value);if(t.id==='vId')S.vf.id=t.value;}
+  else if(k==='code')t.value=fmtCode(t.value);
+  else if(k==='q'){S.q=t.value;renderList();}
+  else if(k==='csv')S.imp.csv=t.value;
+});
+document.addEventListener('change',e=>{
+  const t=e.target,k=t.dataset&&t.dataset.change;
+  if(!k)return;
+  if(k==='prog'){S.prog=t.value;renderList();}
+  else if(k==='st'){S.st=t.value;renderList();}
+  else if(k==='stu'){S.stu=t.value;render();}
+  else if(k==='vp')S.vf.purpose=t.value;
+  else if(k==='vs')S.vf.scopes[t.dataset.k]=t.checked;
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.drawer)closeDrawer();});
+
+/* ---------- boot ---------- */
+(async function boot(){
+  let d=load();
+  if(!d){d=seed();await sealSeed(d);}
+  D=d;
+  await recheck();
+  save();
+  render();
+})();
+})();
+</script>
